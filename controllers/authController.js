@@ -132,9 +132,7 @@ export const loginGoogleMobile = async (req, res) => {
   try {
     const { idToken, accessToken } = req.body || {};
     if (!idToken && !accessToken) {
-      return res
-        .status(400)
-        .json({ message: "idToken ou accessToken requis" });
+      return res.status(400).json({ message: "idToken ou accessToken requis" });
     }
 
     let email = null;
@@ -323,7 +321,9 @@ export const updateUsername = async (req, res) => {
     if (username.length < 3) {
       return res
         .status(400)
-        .json({ message: "Le nom d'utilisateur doit contenir au moins 3 caracteres" });
+        .json({
+          message: "Le nom d'utilisateur doit contenir au moins 3 caracteres",
+        });
     }
 
     const conflict = await User.findOne({
@@ -332,7 +332,9 @@ export const updateUsername = async (req, res) => {
     });
 
     if (conflict) {
-      return res.status(400).json({ message: "Nom d'utilisateur deja utilise" });
+      return res
+        .status(400)
+        .json({ message: "Nom d'utilisateur deja utilise" });
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -501,23 +503,23 @@ export const forgotPassword = async (req, res) => {
     user.resetCode = code;
     user.resettCodeExpires = Date.now() + 1000 * 60; // 60 secondes
     await user.save();
-    
+
     try {
       await sendOTPEmail(email, code);
     } catch (emailError) {
       console.error("Email send failed:", emailError.message);
-      return res.status(500).json({ 
+      return res.status(500).json({
         message: "Erreur envoi email",
-        detail: emailError.message 
+        detail: emailError.message,
       });
     }
-    
+
     return res.status(200).json({ message: "OTP envoye a l'email" });
   } catch (error) {
     console.error("forgotPassword error:", error.message);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Erreur lors du traitement forgotPassword",
-      detail: error.message 
+      detail: error.message,
     });
   }
 };
@@ -528,7 +530,9 @@ export const resetPassword = async (req, res) => {
     const newPassword = (req.body?.newPassword || "").toString().trim();
 
     if (!email || !code || !newPassword) {
-      return res.status(400).json({ message: "Email, code et nouveau mot de passe requis" });
+      return res
+        .status(400)
+        .json({ message: "Email, code et nouveau mot de passe requis" });
     }
 
     if (newPassword.length < 6) {
