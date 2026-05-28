@@ -6,6 +6,7 @@ import {
   getBlockedUsers,
   getLeaderboard,
   getOneUser,
+  addCoinsToCurrentUser,
   patchUserCoinsById,
   respondFriendRequest,
   sendFriendRequest,
@@ -19,6 +20,7 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 //PATCH
+router.post("/me/coins/reward", authMiddleware, addCoinsToCurrentUser);
 router.patch("/:id/coins", adminMiddleware, patchUserCoinsById);
 router.patch("/:id/updateRole", adminMiddleware, updateUserRole);
 //GET

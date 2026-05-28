@@ -89,6 +89,40 @@ export const patchUserCoinsById = async (req, res) => {
       .json({ message: "Erreur lors de la mise a jour des pieces" });
   }
 };
+
+export const addCoinsToCurrentUser = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    const amount = Number(req.body?.amount);
+
+    if (!userId) {
+      return res.status(401).json({ message: "Non authentifie" });
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ message: "Montant de coins invalide" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $inc: { coins: amount } },
+      { new: true, runValidators: true },
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "Utilisateur non trouve" });
+    }
+
+    return res.status(200).json({
+      message: "Coins ajoutes",
+      userId: updatedUser._id,
+      coins: updatedUser.coins,
+    });
+  } catch (error) {
+    console.log("addCoinsToCurrentUser error:", error.message);
+    return res.status(500).json({ message: "Erreur lors de l'ajout des coins" });
+  }
+};
 export const updateUserRole = async (req, res) => {
   try {
     const userId = req.params.id;
