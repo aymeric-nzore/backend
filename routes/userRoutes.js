@@ -7,6 +7,7 @@ import {
   getLeaderboard,
   getOneUser,
   addCoinsToCurrentUser,
+  addProgressRewardToCurrentUser,
   patchUserCoinsById,
   respondFriendRequest,
   sendFriendRequest,
@@ -21,6 +22,7 @@ const router = express.Router();
 
 //PATCH
 router.post("/me/coins/reward", authMiddleware, addCoinsToCurrentUser);
+router.post("/me/rewards", authMiddleware, addProgressRewardToCurrentUser);
 router.patch("/:id/coins", adminMiddleware, patchUserCoinsById);
 router.patch("/:id/updateRole", adminMiddleware, updateUserRole);
 //GET

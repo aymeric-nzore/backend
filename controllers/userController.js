@@ -123,6 +123,66 @@ export const addCoinsToCurrentUser = async (req, res) => {
     return res.status(500).json({ message: "Erreur lors de l'ajout des coins" });
   }
 };
+
+export const xpRequiredToLevelUp = (level) => {
+  return 100 + level * 25;
+};
+
+export const addProgressRewardToCurrentUser = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    const xpAmount = Math.max(0, Math.floor(Number(req.body?.xp ?? 0)));
+    const coinAmount = Math.max(0, Math.floor(Number(req.body?.coins ?? 0)));
+
+    if (!userId) {
+      return res.status(401).json({ message: "Non authentifie" });
+    }
+
+    if (xpAmount === 0 && coinAmount === 0) {
+      return res.status(400).json({ message: "Recompense invalide" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouve" });
+    }
+
+    let level = user.level ?? 0;
+    let currentXp = user.xp ?? 0;
+
+    user.totalXP = (user.totalXP ?? 0) + xpAmount;
+    user.coins = (user.coins ?? 0) + coinAmount;
+    currentXp += xpAmount;
+
+    while (currentXp >= xpRequiredToLevelUp(level)) {
+      currentXp -= xpRequiredToLevelUp(level);
+      level += 1;
+    }
+
+    user.level = level;
+    user.xp = currentXp;
+    await user.save();
+
+    return res.status(200).json({
+      message: "Recompense ajoutee",
+      userId: user._id,
+      level: user.level,
+      xp: user.xp,
+      totalXP: user.totalXP,
+      coins: user.coins,
+      earned: {
+        xp: xpAmount,
+        coins: coinAmount,
+      },
+    });
+  } catch (error) {
+    console.log("addProgressRewardToCurrentUser error:", error.message);
+    return res
+      .status(500)
+      .json({ message: "Erreur lors de l'ajout des recompenses" });
+  }
+};
+
 export const updateUserRole = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -368,12 +428,3 @@ export const unblockUser = async (req, res) => {
     return res.status(500).json({ message: "Erreur deblocage utilisateur" });
   }
 };
-
-//logique concernant les jeux
-export const xpRequiredToLevelUp = (level) =>{
-  return 100 + level * 25;
-}
-
-export const addXp = async (req , res)=>{
-  const user = await User.findById(req.params.id)
-}
