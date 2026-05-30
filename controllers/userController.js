@@ -133,18 +133,41 @@ export const addProgressRewardToCurrentUser = async (req, res) => {
     const userId = req.user?._id;
     const xpAmount = Math.max(0, Math.floor(Number(req.body?.xp ?? 0)));
     const coinAmount = Math.max(0, Math.floor(Number(req.body?.coins ?? 0)));
+    const rewardType = (req.body?.rewardType ?? '').toString().trim();
+    const rewardId = (req.body?.rewardId ?? '').toString().trim();
 
     if (!userId) {
       return res.status(401).json({ message: "Non authentifie" });
     }
 
-    if (xpAmount === 0 && coinAmount === 0) {
-      return res.status(400).json({ message: "Recompense invalide" });
+    if (!rewardType || !rewardId) {
+      return res.status(400).json({ message: "Identifiant de recompense invalide" });
+    }
+
+    if (!['chapter', 'quiz'].includes(rewardType)) {
+      return res.status(400).json({ message: "Type de recompense invalide" });
     }
 
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "Utilisateur non trouve" });
+    }
+
+    const chapterRewards = new Set(user.completedChapterRewards ?? []);
+    const quizRewards = new Set(user.completedQuizRewards ?? []);
+    const claimedSet = rewardType === 'chapter' ? chapterRewards : quizRewards;
+
+    if (claimedSet.has(rewardId)) {
+      return res.status(200).json({
+        message: "Recompense deja collecte",
+        alreadyClaimed: true,
+        userId: user._id,
+        level: user.level ?? 0,
+        xp: user.xp ?? 0,
+        totalXP: user.totalXP ?? 0,
+        coins: user.coins ?? 0,
+        earned: { xp: 0, coins: 0 },
+      });
     }
 
     let level = user.level ?? 0;
@@ -161,10 +184,16 @@ export const addProgressRewardToCurrentUser = async (req, res) => {
 
     user.level = level;
     user.xp = currentXp;
+    if (rewardType === 'chapter') {
+      user.completedChapterRewards = [...chapterRewards, rewardId];
+    } else {
+      user.completedQuizRewards = [...quizRewards, rewardId];
+    }
     await user.save();
 
     return res.status(200).json({
       message: "Recompense ajoutee",
+      alreadyClaimed: false,
       userId: user._id,
       level: user.level,
       xp: user.xp,

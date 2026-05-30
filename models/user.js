@@ -95,6 +95,14 @@ const userSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    completedChapterRewards: {
+      type: [String],
+      default: [],
+    },
+    completedQuizRewards: {
+      type: [String],
+      default: [],
+    },
     isPublicProfile: {
       type: Boolean,
       default: true,

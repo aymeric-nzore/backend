@@ -263,6 +263,8 @@ export const getMe = async (req, res) => {
     level: req.user.level ?? 0,
     xp: req.user.xp ?? 0,
     coins: req.user.coins ?? 0,
+    completedChapterRewards: req.user.completedChapterRewards ?? [],
+    completedQuizRewards: req.user.completedQuizRewards ?? [],
     ownedItems,
   });
 };
